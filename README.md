@@ -38,10 +38,10 @@ This project requires python 3. If your default `python` points to python 2, sub
 These scripts rely on snapshots of Whirpool's transaction graph computed by the OXT platform.
 
 These snapshots can be downloaded at the urls:
-- https://oxt.me/static/share/whirlpool/whirlpool_mix_txs_<denom>.csv (list of mix transactions)
-- https://oxt.me/static/share/whirlpool/whirlpool_tx0s_<denom>.csv (list of mix tx0s)
-- https://oxt.me/static/share/whirlpool/whirlpool_links_<denom>.csv (list of edges between the transactions)
-where <denom> is a code identifying the pool denomination (valid codes = 05, 005, 001)
+- https://oxt.me/static/share/whirlpool/whirlpool_mix_txs_`denom`.csv (list of mix transactions)
+- https://oxt.me/static/share/whirlpool/whirlpool_tx0s_`denom`.csv (list of mix tx0s)
+- https://oxt.me/static/share/whirlpool/whirlpool_links_`denom`.csv (list of edges between the transactions)
+where `denom` is a code identifying the pool denomination (valid codes = 05, 005, 001)
 
 
 ## Contributors
