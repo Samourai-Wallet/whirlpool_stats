@@ -160,8 +160,9 @@ Examples:
     '''
 Plots a scatterplot for a given metrics.
 Examples:
-  plot fwd anonset    => plot a scatterplot displaying the forward looking anonsets
-  plot bwd spread     => plot a scatterplot displaying the backward looking spreads
+  plot fwd anonset    => plot a scatterplot displaying the forward looking anonsets (lin scale)
+  plot bwd spread     => plot a scatterplot displaying the backward looking spreads (lin scale)
+  plot bwd spread log => plot a scatterplot with the y-axis in log scale
     '''
     print('')
 
@@ -171,7 +172,8 @@ Examples:
       l_args = args.split(' ')
       direction = l_args[0]
       metrics = l_args[1]
-      
+      log_scale = True if ((len(l_args) == 3) and l_args[2] == 'log') else False
+
       if direction not in ['fwd', 'bwd']:
         print('Invalid direction (values: fwd, bwd).')
       elif metrics not in ['anonset', 'spread']:
@@ -179,23 +181,23 @@ Examples:
       else:
         if direction == 'fwd':
           o_metrics = self.fwd_metrics
-          lbl_direction = 'Forward-looking'
+          lbl_direction = 'forward-looking'
         else:
           o_metrics = self.bwd_metrics
-          lbl_direction = 'Backward-looking'
-  
+          lbl_direction = 'backward-looking'
+
         if metrics == 'anonset':
           l_metrics = o_metrics.l_anonsets
-          lbl_metrics = 'Anonset'
+          lbl_metrics = 'anonset'
         else:
           l_metrics = o_metrics.l_spreads
-          lbl_metrics = 'Spread'
-  
+          lbl_metrics = 'spread'
+
         mix_rounds = list(range(0, len(l_metrics)))
-  
+
         print('Preparing the chart...')
 
-        chart_title = 'Whirlpool %s %s (pool %s)' % (lbl_direction, lbl_metrics, o_metrics.snapshot.denom)
+        chart_title = 'Whirlpool %s %s (pools %s)' % (lbl_direction, lbl_metrics, o_metrics.snapshot.denom)
 
         scatter = go.Scatter(
           x=mix_rounds,
@@ -204,16 +206,54 @@ Examples:
         )
 
         fig = go.Figure(data=scatter)
-        fig.update_layout(
-          title=go.layout.Title(text=chart_title),
-          xaxis=go.layout.XAxis(title=go.layout.xaxis.Title(text='mix round')),
-          yaxis=go.layout.YAxis(title=go.layout.yaxis.Title(text=lbl_metrics)),
+
+        font_title = dict(
+          family="Courier New, monospace",
+          size=18,
+          color="#9f9f9f"
         )
-        fig.show()
+
+        font_axes = dict(
+          family="Courier New, monospace",
+          size=13,
+          color="#8f8f8f"
+        )
+
+        fig.update_traces(
+          mode='markers',
+          marker_size=3
+        )
+
+        fig.update_layout(
+          template='plotly_dark',
+          yaxis_type = 'log' if log_scale else 'linear',
+          title=go.layout.Title(
+            text=chart_title,
+            font=font_title
+          ),
+          xaxis=go.layout.XAxis(
+            title=go.layout.xaxis.Title(
+              text='mix round',
+              font=font_axes
+            )
+          ),
+          yaxis=go.layout.YAxis(
+            title=go.layout.yaxis.Title(
+              text=lbl_metrics,
+              font=font_axes
+            )
+          )
+        )
+
+        fig.show(config={
+          'scrollZoom': True,
+          'displayModeBar': True,
+          'editable': True
+        })
 
     print('')
 
-      
+
   def do_export(self, args):
     '''
 Exports the computed metrics for the active snapshot (csv format)
