@@ -17,3 +17,17 @@ FILENAME_TEMPLATES = [
   FN_TX0S,
   FN_LINKS
 ]
+
+# Denomination codes
+DENOM_05 = '05'
+DENOM_005 = '005'
+DENOM_001 = '001'
+
+ALL_DENOMS = [
+  DENOM_05,
+  DENOM_005,
+  DENOM_001
+]
+
+# Number of participants per mix
+NB_PARTICIPANTS = 5
