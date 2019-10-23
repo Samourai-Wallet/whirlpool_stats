@@ -10,6 +10,21 @@ Main features:
 - generation of dynamic charts for the active snapshot
 - display of computed metrics for a mix transaction stored in the active snapshot
 
+## Metrics
+
+### Anonymity sets
+
+#### Backward-looking anonymity set
+
+The entry point to Whirlpool is a 'tx0'.
+
+Backward-looking anonymity set for a selected utxo is defined as the number of 'tx0' ancestors that feed into the transaction of the selected utxo.
+
+Every mixed utxo can backtrace a path to the initial mix in its own pool because every mix after the initial mix in each pool contains at least one remixed utxo. This ensures that the anonymity set for any pool goes back to the pool's inception.
+
+#### Forward-looking anonymity set
+
+Forward-looking anonymity set for a selected utxo is defined as the number of un-remixed utxos created in the pool starting from the selected utxo's own transaction.
 
 ## Python versions
 
