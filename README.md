@@ -41,7 +41,7 @@ plotly >= 4.1.0
 
 Manual installation
 ```
-Gets the library from Github : https://github.com/Samourai-Wallet/whirlpool_stats.git
+git clone https://github.com/Samourai-Wallet/whirlpool_stats.git
 Unzips the archive in a temp directory
 python setup.py install
 ```
