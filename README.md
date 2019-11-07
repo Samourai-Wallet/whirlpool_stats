@@ -29,6 +29,7 @@ Forward-looking anonymity set for a selected utxo is defined as the number of un
 ## Python versions
 
 Python >= 3.4.4
+pip3
 
 
 ## Dependencies
@@ -41,8 +42,20 @@ plotly >= 4.1.0
 
 Manual installation
 ```
+# Clone the git repository under the current directory
 git clone https://github.com/Samourai-Wallet/whirlpool_stats.git
-python setup.py install
+
+# Move to /whirlpool_stats directory
+cd whirlpool_stats
+
+# Install the dependencies with pip3
+pip3 install -r ./requirements.txt
+
+# Move to /whirlpool_stats subdirectory
+cd whirlpool_stats
+
+# Start WST
+python3 wst.py
 ```
 
 
