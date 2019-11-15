@@ -3,6 +3,8 @@ Copyright (c) 2019 Katana Cryptographic Ltd. All Rights Reserved.
 
 A class computing a set of metrics for the Tx0s
 '''
+from collections import defaultdict
+from whirlpool_stats.utils.date import get_datetime_of_day
 
 
 class Tx0sMetrics(object):
@@ -16,6 +18,8 @@ class Tx0sMetrics(object):
     self.snapshot = snapshot
     # Dictionary txid_prefix => (nb_outputs_tx0, nb_counterparties)
     self.d_metrics = dict()
+    # Dictionary date => nb_new_tx0s
+    self.d_nb_new_tx0s = defaultdict(int)
 
 
   def compute(self):
@@ -26,10 +30,10 @@ class Tx0sMetrics(object):
 
     # Resets data structures storing the results
     self.d_metrics = dict()
-
-    nb_processed = 0
+    self.d_nb_new_tx0s = defaultdict(int)
 
     # Iterates over the Tx0s
+    nb_processed = 0
     nb_tx0s = len(self.snapshot.d_tx0s.keys())
 
     for prefix, tiid in self.snapshot.d_tx0s.items():
@@ -45,15 +49,41 @@ class Tx0sMetrics(object):
         for prev_tiid in prev_tiids:
           if prev_tiid in self.snapshot.s_tx0s:
             s_counterparties.add(prev_tiid)
-      # Gets number of counterparties for the current Tx0
+      # Gets number of tx0s counterparties for the current Tx0
       # (remove 1 for the current Tx0)
       nb_counterparties = len(s_counterparties) - 1
       # Stores the results
       self.d_metrics[prefix] = (nb_outs, nb_counterparties)
-
+      # Updates the #tx0s created per day
+      day = get_datetime_of_day(self.snapshot.l_ts_tx0s[nb_processed])
+      self.d_nb_new_tx0s[day] += 1
+      # Displays a trace
       nb_processed += 1
       if nb_processed % 100 == 0:
         pct_progress = nb_processed * 100 / nb_tx0s
         print('  Computed metrics for %d tx0s (%d%%)' % (nb_processed, pct_progress))
 
     print('Done!')
+
+
+  def export_csv(self, export_dir):
+    '''
+    Exports the metrics in csv format
+    Parameters:
+      export_dir = export directory
+    '''
+    # Exports activty metrics (part 2)
+    filename = 'whirlpool_%s_activity_metrics_2.csv' % self.snapshot.denom
+    filepath = '%s/%s' % (export_dir, filename)
+
+    f = open(filepath, 'w')
+    line = 'date;nb_new_tx0s\n'
+    f.write(line)
+
+    for k,v in self.d_nb_new_tx0s.items():
+      day = k.strftime('%d/%m/%Y')
+      line = '%s;%d\n' % (day, v)
+      f.write(line)
+
+    f.close()
+    print('Exported activity metrics (part 2) in %s' % filepath)

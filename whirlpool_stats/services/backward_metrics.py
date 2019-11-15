@@ -3,6 +3,8 @@ Copyright (c) 2019 Katana Cryptographic Ltd. All Rights Reserved.
 
 A class computing a set of metrics for the mixed UTXOs (backward-looking)
 '''
+from collections import defaultdict
+from whirlpool_stats.utils.date import get_datetime_of_day
 
 
 class BackwardMetrics(object):
@@ -20,6 +22,12 @@ class BackwardMetrics(object):
     self.l_anonsets = []
     # List of spreads ordered by mix round
     self.l_spreads = []
+    # Dictionary date => nb_mixes
+    self.d_nb_mixes = defaultdict(int)
+    # Dictionary date => inflow
+    self.d_inflow = defaultdict(int)
+    # Dictionary date => nb_active_tx0s
+    self.d_nb_active_tx0s = defaultdict(int)
 
 
   def compute(self):
@@ -31,6 +39,12 @@ class BackwardMetrics(object):
     # Resets data structures storing the results
     self.l_anonsets = []
     self.l_spreads = []
+    self.d_nb_mixes = defaultdict(int)
+    self.d_inflow = defaultdict(int)
+    self.d_nb_active_tx0s = defaultdict(int)
+
+    # Dictionary day => set od active tx0s
+    d_tmp_active_tx0s = defaultdict(set)
 
     # Iterates over the ordered list of mix txs
     # and computes their anonsets and spreads (backward-looking)
@@ -47,10 +61,23 @@ class BackwardMetrics(object):
       nb_past_tx0s = len(list(filter(lambda x: x < tiid, self.snapshot.l_tx0s)))
       spread = float(anonset) * 100.0 / float(nb_past_tx0s)
       self.l_spreads.append(spread)
+      # Updates activity metrics
+      day = get_datetime_of_day(self.snapshot.l_ts_mix_txs[mix_round])
+      self.d_nb_mixes[day] += 1
+      prev_tiids = self.snapshot.d_reverse_links[tiid]
+      for prev_tiid in prev_tiids:
+        if prev_tiid in self.snapshot.s_tx0s:
+          self.d_inflow[day] += 1
+          d_tmp_active_tx0s[day].add(prev_tiid)
+      # Displays a trace
       if mix_round % 100 == 0:
         pct_progress = mix_round * 100 / nb_mixes
         print('  Computed metrics for round %d (%d%%)' % (mix_round, pct_progress))
       mix_round += 1
+
+    # Fills d_nb_active_tx0s
+    for k,v in d_tmp_active_tx0s.items():
+      self.d_nb_active_tx0s[k] = len(v)
 
     print('Done!')
 
@@ -82,6 +109,7 @@ class BackwardMetrics(object):
     Parameters:
       export_dir = export directory
     '''
+    # Exports backward-looking metrics
     filename = 'whirlpool_%s_backward_metrics.csv' % self.snapshot.denom
     filepath = '%s/%s' % (export_dir, filename)
 
@@ -92,6 +120,27 @@ class BackwardMetrics(object):
     for r in range(0, len(self.l_anonsets)):
       line = '%d;%d;%.2f\n' % (r, self.l_anonsets[r], self.l_spreads[r])
       f.write(line)
+
     f.close()
-    
     print('Exported backward-looking metrics in %s' % filepath)
+
+    # Exports activty metrics (part 1)
+    filename = 'whirlpool_%s_activity_metrics.csv' % self.snapshot.denom
+    filepath = '%s/%s' % (export_dir, filename)
+
+    f = open(filepath, 'w')
+    line = 'date;nb_mixes;inflow;nb_active_tx0s\n'
+    f.write(line)
+
+    for k,v in self.d_nb_mixes.items():
+      day = k.strftime('%d/%m/%Y')
+      line = '%s;%d;%d;%d\n' % (
+        day,
+        v, 
+        self.d_inflow[k],
+        self.d_nb_active_tx0s[k]
+      )
+      f.write(line)
+
+    f.close()
+    print('Exported activity metrics (part 1) in %s' % filepath)
