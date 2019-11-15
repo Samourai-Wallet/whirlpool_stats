@@ -7,12 +7,11 @@ import os
 import sys
 import getopt
 from cmd import Cmd
-from collections import defaultdict
 
 # Adds whirlpool_stats directory into path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
 
-from whirlpool_stats.utils.constants import ALL_DENOMS
+from whirlpool_stats.utils.constants import ALL_DENOMS, TXID_PREFIX_LENGTH
 from whirlpool_stats.utils.charts import *
 from whirlpool_stats.services.downloader import Downloader
 from whirlpool_stats.services.snapshot import Snapshot
@@ -144,7 +143,7 @@ Examples:
       print(' ')
       return
     
-    txid_prefix = args[0:9]
+    txid_prefix = args[0:2*TXID_PREFIX_LENGTH+1]
 
     if txid_prefix in self.snapshot.d_txids.keys():
       mix_round = self.snapshot.d_txids[txid_prefix]
@@ -215,6 +214,7 @@ Examples:
           lbl_y = 'anonset'
           chart_title = 'Whirlpool %s %s (pools %s)' %\
             (lbl_direction, lbl_y, o_metrics.snapshot.denom)
+
         elif metrics == 'spread':
           chart_type = CT_SCATTERPLOT
           y_values = o_metrics.l_spreads
@@ -223,6 +223,7 @@ Examples:
           lbl_y = 'spread'
           chart_title = 'Whirlpool %s %s (pools %s)' %\
             (lbl_direction, lbl_y, o_metrics.snapshot.denom)
+
         else:
           print('Invalid metrics (values: anonset, spread).')
 
@@ -239,6 +240,7 @@ Examples:
           lbl_y = 'heterogeneity ratio (#counterparties / #mixed outputs)'
           chart_title = 'Whirlpool %s (pools %s)' %\
             (lbl_direction, o_metrics.snapshot.denom)
+
         elif metrics == 'hrout':
           chart_type = CT_SCATTERPLOT
           l_metrics = list(o_metrics.d_metrics.values())
@@ -248,6 +250,7 @@ Examples:
           lbl_y = 'heterogeneity ratio'
           chart_title = 'Whirlpool %s vs %s (pools %s)' %\
             (lbl_y, lbl_x, o_metrics.snapshot.denom)
+
         elif metrics == 'hrdist':
           chart_type = CT_BARCHART
           l_metrics = list(o_metrics.d_metrics.values())
@@ -256,6 +259,7 @@ Examples:
           lbl_y = 'percentage of all Tx0s'
           chart_title = 'Whirlpool distribution of Tx0s per %s (pools %s)' %\
             (lbl_x, o_metrics.snapshot.denom)
+
         else:
           print('Invalid metrics (values: hr, hrout, hrdist).')
 
