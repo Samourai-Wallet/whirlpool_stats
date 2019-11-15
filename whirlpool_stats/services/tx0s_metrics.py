@@ -64,26 +64,3 @@ class Tx0sMetrics(object):
         print('  Computed metrics for %d tx0s (%d%%)' % (nb_processed, pct_progress))
 
     print('Done!')
-
-
-  def export_csv(self, export_dir):
-    '''
-    Exports the metrics in csv format
-    Parameters:
-      export_dir = export directory
-    '''
-    # Exports activty metrics (part 2)
-    filename = 'whirlpool_%s_activity_metrics_2.csv' % self.snapshot.denom
-    filepath = '%s/%s' % (export_dir, filename)
-
-    f = open(filepath, 'w')
-    line = 'date;nb_new_tx0s\n'
-    f.write(line)
-
-    for k,v in self.d_nb_new_tx0s.items():
-      day = k.strftime('%d/%m/%Y')
-      line = '%s;%d\n' % (day, v)
-      f.write(line)
-
-    f.close()
-    print('Exported activity metrics (part 2) in %s' % filepath)

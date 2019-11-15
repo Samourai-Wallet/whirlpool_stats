@@ -18,7 +18,7 @@ from whirlpool_stats.services.snapshot import Snapshot
 from whirlpool_stats.services.forward_metrics import ForwardMetrics
 from whirlpool_stats.services.backward_metrics import BackwardMetrics
 from whirlpool_stats.services.tx0s_metrics import Tx0sMetrics
-
+from whirlpool_stats.services.exporter import Exporter
 
 
 class WhirlpoolStats(Cmd):
@@ -39,6 +39,12 @@ class WhirlpoolStats(Cmd):
     self.bwd_metrics = BackwardMetrics(self.snapshot)
     # Tx0s metrics
     self.tx0_metrics = Tx0sMetrics(self.snapshot)
+    # Exporter
+    self.exporter = Exporter(
+      self.fwd_metrics,
+      self.bwd_metrics,
+      self.tx0_metrics
+    )
 
 
   def set_prompt(self):
@@ -184,7 +190,7 @@ Examples:
   plot fwd anonset      => plot a scatterplot displaying the forward looking anonsets (lin scale)
   plot bwd spread       => plot a scatterplot displaying the backward looking spreads (lin scale)
   plot bwd spread log   => plot a scatterplot with the y-axis in log scale
-  plot act inflow       => plot a linechart of the daily inflow expressed in new incoming UTXOs
+  plot act inflow       => plot a linechart of the daily inflow expressed in UTXOs entering the pool
   plot act mixes        => plot a linechart of the daily number of mixes
   plot act tx0s_created => plot a linechart of the daily number of Tx0s created
   plot act tx0s_active  => plot a linechart of the daily number of active Tx0s
@@ -337,9 +343,7 @@ Examples:
     '''
     print('')
     export_dir = self.working_dir if (len(args) == 0) else args
-    self.fwd_metrics.export_csv(export_dir)
-    self.bwd_metrics.export_csv(export_dir)
-    self.tx0_metrics.export_csv(export_dir)
+    self.exporter.export(export_dir)
     print(' ')
 
 

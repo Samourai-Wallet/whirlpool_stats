@@ -78,24 +78,3 @@ class ForwardMetrics(object):
   
     self.s_processed_txs.add(tiid)
     return nb_utxos
-
-
-  def export_csv(self, export_dir):
-    '''
-    Exports the metrics in csv format
-    Parameters:
-      export_dir = export directory
-    '''
-    filename = 'whirlpool_%s_forward_metrics.csv' % self.snapshot.denom
-    filepath = '%s/%s' % (export_dir, filename)
-
-    f = open(filepath, 'w')
-    line = 'mix_round;anonset;spread\n'
-    f.write(line)
-
-    for r in range(0, len(self.l_anonsets)):
-      line = '%d;%d;%.2f\n' % (r, self.l_anonsets[r], self.l_spreads[r])
-      f.write(line)
-    f.close()
-    
-    print('Exported forward-looking metrics in %s' % filepath)
