@@ -5,8 +5,7 @@ Set of constants used by the scripts
 '''
 
 # OXT base url for whirpool snapshots
-#TODO Replace with correct URL
-BASE_URL_SNAPSHOTS = 'https://oxt.me/static/share/whirlpooltest'
+BASE_URL_SNAPSHOTS = 'https://oxt.me/static/share/whirlpool'
 
 # Filename templates composing the snapshot for a given denomination
 FN_MIX_TXS = 'whirlpool_mix_txs'
