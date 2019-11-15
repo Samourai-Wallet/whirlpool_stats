@@ -181,12 +181,16 @@ Examples:
     '''
 Plots a scatterplot for a given metrics.
 Examples:
-  plot fwd anonset    => plot a scatterplot displaying the forward looking anonsets (lin scale)
-  plot bwd spread     => plot a scatterplot displaying the backward looking spreads (lin scale)
-  plot bwd spread log => plot a scatterplot with the y-axis in log scale
-  plot tx0 hr         => plot a scatterplot displaying the heteogeneity ratio of the tx0s
-  plot tx0 hrout      => plot a scatterplot displaying heteogeneity ratio vs #mixed outputs for the tx0s
-  plot tx0 hrdist     => plot a histogram displaying the distribution of tx0s per heterogeneity ratio
+  plot fwd anonset      => plot a scatterplot displaying the forward looking anonsets (lin scale)
+  plot bwd spread       => plot a scatterplot displaying the backward looking spreads (lin scale)
+  plot bwd spread log   => plot a scatterplot with the y-axis in log scale
+  plot act inflow       => plot a linechart of the daily inflow expressed in new incoming UTXOs
+  plot act mixes        => plot a linechart of the daily number of mixes
+  plot act tx0s_created => plot a linechart of the daily number of Tx0s created
+  plot act tx0s_active  => plot a linechart of the daily number of active Tx0s
+  plot tx0 hr           => plot a scatterplot displaying the heteogeneity ratio of the tx0s
+  plot tx0 hrout        => plot a scatterplot displaying heteogeneity ratio vs #mixed outputs for the tx0s
+  plot tx0 hrdist       => plot a histogram displaying the distribution of tx0s per heterogeneity ratio
     '''
     print('')
 
@@ -198,6 +202,7 @@ Examples:
       metrics = l_args[1]
       log_scale = True if ((len(l_args) == 3) and l_args[2] == 'log') else False
 
+      # Backward/Forward looking metrics
       if category in ['fwd', 'bwd']:
         if category == 'fwd':
           o_metrics = self.fwd_metrics
@@ -227,6 +232,7 @@ Examples:
         else:
           print('Invalid metrics (values: anonset, spread).')
 
+      # Tx0s metrics
       elif category == 'tx0':
         o_metrics = self.tx0_metrics
         lbl_direction = 'Tx0s counterparties heterogeneity'
@@ -263,8 +269,50 @@ Examples:
         else:
           print('Invalid metrics (values: hr, hrout, hrdist).')
 
+      # Activity metrics
+      elif category == 'act':
+        if metrics == 'inflow':
+          o_metrics = self.bwd_metrics
+          chart_type = CT_LINEARCHART
+          l_inflow = sorted(o_metrics.d_inflow.items())
+          x_values, y_values = zip(*l_inflow)
+          lbl_x = 'date'
+          lbl_y = 'inflow (#UTXOs entering the pool)'
+          chart_title = 'Whirlpool daily inflow (pools %s)' % o_metrics.snapshot.denom
+
+        elif metrics == 'mixes':
+          o_metrics = self.bwd_metrics
+          chart_type = CT_LINEARCHART
+          l_nb_mixes = sorted(o_metrics.d_nb_mixes.items())
+          x_values, y_values = zip(*l_nb_mixes)
+          lbl_x = 'date'
+          lbl_y = 'mixes'
+          chart_title = 'Whirlpool mixes (pools %s)' % o_metrics.snapshot.denom
+
+        elif metrics == 'tx0s_active':
+          o_metrics = self.bwd_metrics
+          chart_type = CT_LINEARCHART
+          l_nb_mixes = sorted(o_metrics.d_nb_active_tx0s.items())
+          x_values, y_values = zip(*l_nb_mixes)
+          lbl_x = 'date'
+          lbl_y = 'active tx0s'
+          chart_title = 'Whirlpool active Tx0s (pools %s)' % o_metrics.snapshot.denom
+
+        elif metrics == 'tx0s_created':
+          o_metrics = self.tx0_metrics
+          chart_type = CT_LINEARCHART
+          l_tx0s = sorted(o_metrics.d_nb_new_tx0s.items())
+          x_values, y_values = zip(*l_tx0s)
+          lbl_x = 'date'
+          lbl_y = 'tx0s created'
+          chart_title = 'Whirlpool Tx0s created (pools %s)' % o_metrics.snapshot.denom
+
+        else:
+          print('Invalid metrics (values: inflow, mixes, tx0s_created, tx0s_active).')
+
+      # Unknown category
       else:
-        print('Invalid category (values: fwd, bwd, tx0).')
+        print('Invalid category (values: fwd, bwd, act, tx0).')
         return
      
       print('Preparing the chart...')
@@ -273,6 +321,8 @@ Examples:
         scatterplot(x_values, y_values, log_scale, chart_title, lbl_x, lbl_y)
       elif chart_type == CT_BARCHART:
         barchart(x_values, chart_title, lbl_x, lbl_y)
+      elif chart_type == CT_LINEARCHART:
+        linearchart(x_values, y_values, log_scale, chart_title, lbl_x, lbl_y)
 
     print('')
 
@@ -289,6 +339,7 @@ Examples:
     export_dir = self.working_dir if (len(args) == 0) else args
     self.fwd_metrics.export_csv(export_dir)
     self.bwd_metrics.export_csv(export_dir)
+    self.tx0_metrics.export_csv(export_dir)
     print(' ')
 
 
