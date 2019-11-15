@@ -52,6 +52,7 @@ class ForwardMetrics(object):
         nb_later_unmixed_txos += NB_PARTICIPANTS - nb_remixes
       spread = float(anonset) * 100.0 / float(nb_later_unmixed_txos)
       self.l_spreads.append(spread)
+      # Displays a trace
       if mix_round % 100 == 0:
         pct_progress = mix_round * 100 / nb_mixes
         print('  Computed metrics for round %d (%d%%)' % (mix_round, pct_progress))
