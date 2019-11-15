@@ -12,13 +12,13 @@ from cmd import Cmd
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
 
 from whirlpool_stats.utils.constants import ALL_DENOMS, TXID_PREFIX_LENGTH
-from whirlpool_stats.utils.charts import *
 from whirlpool_stats.services.downloader import Downloader
 from whirlpool_stats.services.snapshot import Snapshot
 from whirlpool_stats.services.forward_metrics import ForwardMetrics
 from whirlpool_stats.services.backward_metrics import BackwardMetrics
 from whirlpool_stats.services.tx0s_metrics import Tx0sMetrics
 from whirlpool_stats.services.exporter import Exporter
+from whirlpool_stats.services.metrics_plotter import Plotter
 
 
 class WhirlpoolStats(Cmd):
@@ -41,6 +41,12 @@ class WhirlpoolStats(Cmd):
     self.tx0_metrics = Tx0sMetrics(self.snapshot)
     # Exporter
     self.exporter = Exporter(
+      self.fwd_metrics,
+      self.bwd_metrics,
+      self.tx0_metrics
+    )
+    # Metrics plotter
+    self.plotter = Plotter(
       self.fwd_metrics,
       self.bwd_metrics,
       self.tx0_metrics
@@ -185,18 +191,30 @@ Examples:
 
   def do_plot(self, args):
     '''
-Plots a scatterplot for a given metrics.
-Examples:
-  plot fwd anonset      => plot a scatterplot displaying the forward looking anonsets (lin scale)
-  plot bwd spread       => plot a scatterplot displaying the backward looking spreads (lin scale)
-  plot bwd spread log   => plot a scatterplot with the y-axis in log scale
-  plot act inflow       => plot a linechart of the daily inflow expressed in UTXOs entering the pool
-  plot act mixes        => plot a linechart of the daily number of mixes
-  plot act tx0s_created => plot a linechart of the daily number of Tx0s created
-  plot act tx0s_active  => plot a linechart of the daily number of active Tx0s
-  plot tx0 hr           => plot a scatterplot displaying the heteogeneity ratio of the tx0s
-  plot tx0 hrout        => plot a scatterplot displaying heteogeneity ratio vs #mixed outputs for the tx0s
-  plot tx0 hrdist       => plot a histogram displaying the distribution of tx0s per heterogeneity ratio
+Plots a chart for a given metrics.
+
+Syntax: plot <category> <name> [log]
+
+Available charts:
+
+- Forward-looking privacy metrics ----------------------------------------------------------------------------------------
+    plot fwd anonset        => plot a scatterplot displaying the forward looking anonsets
+    plot fwd spread         => plot a scatterplot displaying the forward looking spreads
+
+- Backward-looking privacy metrics ---------------------------------------------------------------------------------------
+    plot bwd spread         => plot a scatterplot displaying the backward looking spreads
+    plot bwd spread         => plot a scatterplot with the y-axis in log scale
+
+- Activity metrics -------------------------------------------------------------------------------------------------------
+    plot act inflow         => plot a linechart of the daily inflow expressed in number of UTXOs entering the pool
+    plot act mixes          => plot a linechart of the daily number of mixes
+    plot act tx0s_created   => plot a linechart of the daily number of Tx0s created
+    plot act tx0s_active    => plot a linechart of the daily number of active Tx0s
+
+- Tx0s metrics -----------------------------------------------------------------------------------------------------------
+    plot tx0 hr             => plot a scatterplot displaying the heteogeneity ratio of the tx0s
+    plot tx0 hrout          => plot a scatterplot displaying the heteogeneity ratio vs the number of mixed Tx0s outputs
+    plot tx0 hrdist         => plot a histogram displaying the distribution of tx0s per heterogeneity ratio
     '''
     print('')
 
@@ -207,129 +225,8 @@ Examples:
       category = l_args[0]
       metrics = l_args[1]
       log_scale = True if ((len(l_args) == 3) and l_args[2] == 'log') else False
-
-      # Backward/Forward looking metrics
-      if category in ['fwd', 'bwd']:
-        if category == 'fwd':
-          o_metrics = self.fwd_metrics
-          lbl_direction = 'forward-looking'
-        elif category == 'bwd':
-          o_metrics = self.bwd_metrics
-          lbl_direction = 'backward-looking'
-
-        if metrics == 'anonset':
-          chart_type = CT_SCATTERPLOT
-          y_values = o_metrics.l_anonsets
-          x_values = list(range(0, len(y_values)))
-          lbl_x = 'mix round'
-          lbl_y = 'anonset'
-          chart_title = 'Whirlpool %s %s (pools %s)' %\
-            (lbl_direction, lbl_y, o_metrics.snapshot.denom)
-
-        elif metrics == 'spread':
-          chart_type = CT_SCATTERPLOT
-          y_values = o_metrics.l_spreads
-          x_values = list(range(0, len(y_values)))
-          lbl_x = 'mix round'
-          lbl_y = 'spread'
-          chart_title = 'Whirlpool %s %s (pools %s)' %\
-            (lbl_direction, lbl_y, o_metrics.snapshot.denom)
-
-        else:
-          print('Invalid metrics (values: anonset, spread).')
-
-      # Tx0s metrics
-      elif category == 'tx0':
-        o_metrics = self.tx0_metrics
-        lbl_direction = 'Tx0s counterparties heterogeneity'
-
-        if metrics == 'hr':
-          chart_type = CT_SCATTERPLOT
-          l_metrics = list(o_metrics.d_metrics.values())
-          y_values = [float(item[1]) / float(item[0]) for item in l_metrics]
-          x_values = list(range(0, len(y_values)))
-          lbl_x = 'tx0 index'
-          lbl_y = 'heterogeneity ratio (#counterparties / #mixed outputs)'
-          chart_title = 'Whirlpool %s (pools %s)' %\
-            (lbl_direction, o_metrics.snapshot.denom)
-
-        elif metrics == 'hrout':
-          chart_type = CT_SCATTERPLOT
-          l_metrics = list(o_metrics.d_metrics.values())
-          y_values = [float(item[1]) / float(item[0]) for item in l_metrics]
-          x_values = [item[0] for item in l_metrics]
-          lbl_x = '#outputs mixed'
-          lbl_y = 'heterogeneity ratio'
-          chart_title = 'Whirlpool %s vs %s (pools %s)' %\
-            (lbl_y, lbl_x, o_metrics.snapshot.denom)
-
-        elif metrics == 'hrdist':
-          chart_type = CT_BARCHART
-          l_metrics = list(o_metrics.d_metrics.values())
-          x_values = [float(item[1]) / float(item[0]) for item in l_metrics]
-          lbl_x = 'heterogeneity ratio'
-          lbl_y = 'percentage of all Tx0s'
-          chart_title = 'Whirlpool distribution of Tx0s per %s (pools %s)' %\
-            (lbl_x, o_metrics.snapshot.denom)
-
-        else:
-          print('Invalid metrics (values: hr, hrout, hrdist).')
-
-      # Activity metrics
-      elif category == 'act':
-        if metrics == 'inflow':
-          o_metrics = self.bwd_metrics
-          chart_type = CT_LINEARCHART
-          l_inflow = sorted(o_metrics.d_inflow.items())
-          x_values, y_values = zip(*l_inflow)
-          lbl_x = 'date'
-          lbl_y = 'inflow (#UTXOs entering the pool)'
-          chart_title = 'Whirlpool daily inflow (pools %s)' % o_metrics.snapshot.denom
-
-        elif metrics == 'mixes':
-          o_metrics = self.bwd_metrics
-          chart_type = CT_LINEARCHART
-          l_nb_mixes = sorted(o_metrics.d_nb_mixes.items())
-          x_values, y_values = zip(*l_nb_mixes)
-          lbl_x = 'date'
-          lbl_y = 'mixes'
-          chart_title = 'Whirlpool mixes (pools %s)' % o_metrics.snapshot.denom
-
-        elif metrics == 'tx0s_active':
-          o_metrics = self.bwd_metrics
-          chart_type = CT_LINEARCHART
-          l_nb_mixes = sorted(o_metrics.d_nb_active_tx0s.items())
-          x_values, y_values = zip(*l_nb_mixes)
-          lbl_x = 'date'
-          lbl_y = 'active tx0s'
-          chart_title = 'Whirlpool active Tx0s (pools %s)' % o_metrics.snapshot.denom
-
-        elif metrics == 'tx0s_created':
-          o_metrics = self.tx0_metrics
-          chart_type = CT_LINEARCHART
-          l_tx0s = sorted(o_metrics.d_nb_new_tx0s.items())
-          x_values, y_values = zip(*l_tx0s)
-          lbl_x = 'date'
-          lbl_y = 'tx0s created'
-          chart_title = 'Whirlpool Tx0s created (pools %s)' % o_metrics.snapshot.denom
-
-        else:
-          print('Invalid metrics (values: inflow, mixes, tx0s_created, tx0s_active).')
-
-      # Unknown category
-      else:
-        print('Invalid category (values: fwd, bwd, act, tx0).')
-        return
-     
-      print('Preparing the chart...')
+      self.plotter.plot(category, metrics, log_scale)
       
-      if chart_type == CT_SCATTERPLOT:
-        scatterplot(x_values, y_values, log_scale, chart_title, lbl_x, lbl_y)
-      elif chart_type == CT_BARCHART:
-        barchart(x_values, chart_title, lbl_x, lbl_y)
-      elif chart_type == CT_LINEARCHART:
-        linearchart(x_values, y_values, log_scale, chart_title, lbl_x, lbl_y)
-
     print('')
 
 
