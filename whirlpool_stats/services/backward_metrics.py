@@ -35,6 +35,7 @@ class BackwardMetrics(object):
     # Iterates over the ordered list of mix txs
     # and computes their anonsets and spreads (backward-looking)
     mix_round = 0
+    nb_mixes = len(self.snapshot.l_mix_txs)
 
     for tiid in self.snapshot.l_mix_txs:
       # Resets the set of txs already reached during this walk
@@ -46,7 +47,9 @@ class BackwardMetrics(object):
       nb_past_tx0s = len(list(filter(lambda x: x < tiid, self.snapshot.l_tx0s)))
       spread = float(anonset) * 100.0 / float(nb_past_tx0s)
       self.l_spreads.append(spread)
-      print('  Computed metrics for round %d' % mix_round)
+      if mix_round % 100 == 0:
+        pct_progress = mix_round * 100 / nb_mixes
+        print('  Computed metrics for round %d (%d%%)' % (mix_round, pct_progress))
       mix_round += 1
 
     print('Done!')
