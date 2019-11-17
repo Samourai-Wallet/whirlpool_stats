@@ -7,17 +7,18 @@ import os
 import sys
 import getopt
 from cmd import Cmd
-import plotly.graph_objects as go
 
 # Adds whirlpool_stats directory into path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../")
 
-from whirlpool_stats.utils.constants import ALL_DENOMS
+from whirlpool_stats.utils.constants import ALL_DENOMS, TXID_PREFIX_LENGTH
 from whirlpool_stats.services.downloader import Downloader
 from whirlpool_stats.services.snapshot import Snapshot
 from whirlpool_stats.services.forward_metrics import ForwardMetrics
 from whirlpool_stats.services.backward_metrics import BackwardMetrics
-
+from whirlpool_stats.services.tx0s_metrics import Tx0sMetrics
+from whirlpool_stats.services.exporter import Exporter
+from whirlpool_stats.services.metrics_plotter import Plotter
 
 
 class WhirlpoolStats(Cmd):
@@ -36,6 +37,20 @@ class WhirlpoolStats(Cmd):
     self.fwd_metrics = ForwardMetrics(self.snapshot)
     # Backward looking metrics
     self.bwd_metrics = BackwardMetrics(self.snapshot)
+    # Tx0s metrics
+    self.tx0_metrics = Tx0sMetrics(self.snapshot)
+    # Exporter
+    self.exporter = Exporter(
+      self.fwd_metrics,
+      self.bwd_metrics,
+      self.tx0_metrics
+    )
+    # Metrics plotter
+    self.plotter = Plotter(
+      self.fwd_metrics,
+      self.bwd_metrics,
+      self.tx0_metrics
+    )
 
 
   def set_prompt(self):
@@ -122,6 +137,7 @@ Examples:
       # Computes the metrics
       self.fwd_metrics.compute()
       self.bwd_metrics.compute()
+      self.tx0_metrics.compute()
 
     print(' ')
 
@@ -136,10 +152,13 @@ Examples:
 
     if len(args) == 0:
       print('The txid of a mix transaction is mandatory.')
-    elif args not in self.snapshot.d_txids.keys():
-      print('Transaction not found in this snapshot.')
-    else:
-      mix_round = self.snapshot.d_txids[args]
+      print(' ')
+      return
+    
+    txid_prefix = args[0:2*TXID_PREFIX_LENGTH+1]
+
+    if txid_prefix in self.snapshot.d_txids.keys():
+      mix_round = self.snapshot.d_txids[txid_prefix]
       fwd_anonset = self.fwd_metrics.l_anonsets[mix_round]
       fwd_spread = self.fwd_metrics.l_spreads[mix_round]
       bwd_anonset = self.bwd_metrics.l_anonsets[mix_round]
@@ -153,104 +172,61 @@ Examples:
       print('  anonset = %d' % fwd_anonset)
       print('  spread = %d%%' % fwd_spread)
 
+    elif txid_prefix in self.snapshot.d_tx0s.keys():
+      tx0_metrics = self.tx0_metrics.d_metrics[txid_prefix]
+      nb_outs = tx0_metrics[0]
+      nb_counterparties = tx0_metrics[1]
+      heterogeneity = float(nb_counterparties) / float(nb_outs)
+
+      print('Metrics for this Tx0:')
+      print('  number of mixed outputs = %d' % nb_outs)
+      print('  number of counterparties (tx0s) = %d' % nb_counterparties)
+      print('  heterogeneity ratio = %.2f' % heterogeneity)
+
+    else:
+      print('Transaction not found in this snapshot.')
+
     print(' ')
 
 
   def do_plot(self, args):
     '''
-Plots a scatterplot for a given metrics.
-Examples:
-  plot fwd anonset    => plot a scatterplot displaying the forward looking anonsets (lin scale)
-  plot bwd spread     => plot a scatterplot displaying the backward looking spreads (lin scale)
-  plot bwd spread log => plot a scatterplot with the y-axis in log scale
+Plots a chart for a given metrics.
+
+Syntax: plot <category> <name> [log]
+
+Available charts:
+
+- Forward-looking privacy metrics ----------------------------------------------------------------------------------------
+    plot fwd anonset        => plot a scatterplot displaying the forward looking anonsets
+    plot fwd spread         => plot a scatterplot displaying the forward looking spreads
+
+- Backward-looking privacy metrics ---------------------------------------------------------------------------------------
+    plot bwd spread         => plot a scatterplot displaying the backward looking spreads
+    plot bwd spread         => plot a scatterplot with the y-axis in log scale
+
+- Activity metrics -------------------------------------------------------------------------------------------------------
+    plot act inflow         => plot a linechart of the daily inflow expressed in number of UTXOs entering the pool
+    plot act mixes          => plot a linechart of the daily number of mixes
+    plot act tx0s_created   => plot a linechart of the daily number of Tx0s created
+    plot act tx0s_active    => plot a linechart of the daily number of active Tx0s
+
+- Tx0s metrics -----------------------------------------------------------------------------------------------------------
+    plot tx0 hr             => plot a scatterplot displaying the heteogeneity ratio of the tx0s
+    plot tx0 hrout          => plot a scatterplot displaying the heteogeneity ratio vs the number of mixed Tx0s outputs
+    plot tx0 hrdist         => plot a histogram displaying the distribution of tx0s per heterogeneity ratio
     '''
     print('')
 
     if len(args) == 0:
-      print('Direction and metrics are mandatory.')
+      print('Category and metrics are mandatory.')
     else:
       l_args = args.split(' ')
-      direction = l_args[0]
+      category = l_args[0]
       metrics = l_args[1]
       log_scale = True if ((len(l_args) == 3) and l_args[2] == 'log') else False
-
-      if direction not in ['fwd', 'bwd']:
-        print('Invalid direction (values: fwd, bwd).')
-      elif metrics not in ['anonset', 'spread']:
-        print('Invalid metrics (values: anonset, spread).')
-      else:
-        if direction == 'fwd':
-          o_metrics = self.fwd_metrics
-          lbl_direction = 'forward-looking'
-        else:
-          o_metrics = self.bwd_metrics
-          lbl_direction = 'backward-looking'
-
-        if metrics == 'anonset':
-          l_metrics = o_metrics.l_anonsets
-          lbl_metrics = 'anonset'
-        else:
-          l_metrics = o_metrics.l_spreads
-          lbl_metrics = 'spread'
-
-        mix_rounds = list(range(0, len(l_metrics)))
-
-        print('Preparing the chart...')
-
-        chart_title = 'Whirlpool %s %s (pools %s)' % (lbl_direction, lbl_metrics, o_metrics.snapshot.denom)
-
-        scatter = go.Scatter(
-          x=mix_rounds,
-          y=l_metrics,
-          mode='markers'
-        )
-
-        fig = go.Figure(data=scatter)
-
-        font_title = dict(
-          family="Courier New, monospace",
-          size=18,
-          color="#9f9f9f"
-        )
-
-        font_axes = dict(
-          family="Courier New, monospace",
-          size=13,
-          color="#8f8f8f"
-        )
-
-        fig.update_traces(
-          mode='markers',
-          marker_size=3
-        )
-
-        fig.update_layout(
-          template='plotly_dark',
-          yaxis_type = 'log' if log_scale else 'linear',
-          title=go.layout.Title(
-            text=chart_title,
-            font=font_title
-          ),
-          xaxis=go.layout.XAxis(
-            title=go.layout.xaxis.Title(
-              text='mix round',
-              font=font_axes
-            )
-          ),
-          yaxis=go.layout.YAxis(
-            title=go.layout.yaxis.Title(
-              text=lbl_metrics,
-              font=font_axes
-            )
-          )
-        )
-
-        fig.show(config={
-          'scrollZoom': True,
-          'displayModeBar': True,
-          'editable': True
-        })
-
+      self.plotter.plot(category, metrics, log_scale)
+      
     print('')
 
 
@@ -264,8 +240,7 @@ Examples:
     '''
     print('')
     export_dir = self.working_dir if (len(args) == 0) else args
-    self.fwd_metrics.export_csv(export_dir)
-    self.bwd_metrics.export_csv(export_dir)
+    self.exporter.export(export_dir)
     print(' ')
 
 

@@ -36,6 +36,7 @@ class ForwardMetrics(object):
     # Iterates over the ordered list of mix txs
     # and computes their anonset
     mix_round = 0
+    nb_mixes = len(self.snapshot.l_mix_txs)
 
     for tiid in self.snapshot.l_mix_txs:
       # Resets the set of txs already reached during this walk
@@ -51,7 +52,10 @@ class ForwardMetrics(object):
         nb_later_unmixed_txos += NB_PARTICIPANTS - nb_remixes
       spread = float(anonset) * 100.0 / float(nb_later_unmixed_txos)
       self.l_spreads.append(spread)
-      print('  Computed metrics for round %d' % mix_round)
+      # Displays a trace
+      if mix_round % 100 == 0:
+        pct_progress = mix_round * 100 / nb_mixes
+        print('  Computed metrics for round %d (%d%%)' % (mix_round, pct_progress))
       mix_round += 1
 
     print('Done!')
@@ -74,24 +78,3 @@ class ForwardMetrics(object):
   
     self.s_processed_txs.add(tiid)
     return nb_utxos
-
-
-  def export_csv(self, export_dir):
-    '''
-    Exports the metrics in csv format
-    Parameters:
-      export_dir = export directory
-    '''
-    filename = 'whirlpool_%s_forward_metrics.csv' % self.snapshot.denom
-    filepath = '%s/%s' % (export_dir, filename)
-
-    f = open(filepath, 'w')
-    line = 'mix_round;anonset;spread\n'
-    f.write(line)
-
-    for r in range(0, len(self.l_anonsets)):
-      line = '%d;%d;%.2f\n' % (r, self.l_anonsets[r], self.l_spreads[r])
-      f.write(line)
-    f.close()
-    
-    print('Exported forward-looking metrics in %s' % filepath)

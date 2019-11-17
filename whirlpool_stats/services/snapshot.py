@@ -32,14 +32,20 @@ class Snapshot(object):
     self.s_mix_txs = set()
     # Ordered list of tx0s
     self.l_tx0s = []
+    # Ordered list of tx0s block timestamps
+    self.l_ts_tx0s = []
     # Ordered list of mix txs
     self.l_mix_txs = []
+    # Ordered list of mix txs block timestamps
+    self.l_ts_mix_txs = []
     # Dictionary of links between txs (src => tgt)
     self.d_links = defaultdict(list)
     # Dictionary of reverse links between txs (tgt => src)
     self.d_reverse_links = defaultdict(list)
     # Dictionary txid => mix_round
     self.d_txids = defaultdict(int)
+    # Dictionary txid => tiid tx0
+    self.d_tx0s = defaultdict(int)
 
 
   def set_dir(self, snapshots_dir):
@@ -75,7 +81,10 @@ class Snapshot(object):
         tiid = int(row[0])
         self.l_mix_txs.append(tiid)
         self.s_mix_txs.add(tiid)
-        self.d_txids[row[1]] = mix_round
+        txid_prefix = row[1][0:2*TXID_PREFIX_LENGTH+1]
+        self.d_txids[txid_prefix] = mix_round
+        ts = int(row[2])
+        self.l_ts_mix_txs.append(ts)
         mix_round += 1
     
     print('  Mix txs loaded')
@@ -91,6 +100,10 @@ class Snapshot(object):
         tiid = int(row[0])
         self.l_tx0s.append(tiid)
         self.s_tx0s.add(tiid)
+        txid_prefix = row[1][0:2*TXID_PREFIX_LENGTH+1]
+        self.d_tx0s[txid_prefix] = tiid
+        ts = int(row[2])
+        self.l_ts_tx0s.append(ts)
 
     print('  Tx0s loaded')
 
