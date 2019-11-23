@@ -29,12 +29,16 @@ Forward-looking anonymity set for a selected utxo is defined as the number of un
 ## Python versions
 
 Python >= 3.4.4
+
 pip3
 
 
 ## Dependencies
 
-requests
+PySocks
+
+requests[socks]
+
 plotly >= 4.1.0
 
 
@@ -88,6 +92,8 @@ wst#/tmp> socks5 127.0.0.1:9150
 
 wst#/tmp>
 ```
+Note: default SOCKS port is  9150 for the Tor Browser Bundle and 9050 for the Tor Expert Bundle.
+
 
 Change the working directory for this WST session
 ```
