@@ -26,7 +26,8 @@ setup(
                'Topic :: Security'],
   cmdclass={'build_ext': build_ext},
   install_requires=[
-    'requests',
+    'PySocks',
+    'requests[socks]',
     'plotly >= 4.1.0'
   ]
 )

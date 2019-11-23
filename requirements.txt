@@ -1,2 +1,3 @@
-requests
+PySocks
+requests[socks]
 plotly >= 4.1.0
