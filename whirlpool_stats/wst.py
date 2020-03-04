@@ -155,7 +155,7 @@ Examples:
       print(' ')
       return
     
-    txid_prefix = args[0:2*TXID_PREFIX_LENGTH+1]
+    txid_prefix = args[0:2*TXID_PREFIX_LENGTH]
 
     if txid_prefix in self.snapshot.d_txids.keys():
       mix_round = self.snapshot.d_txids[txid_prefix]
