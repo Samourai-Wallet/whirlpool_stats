@@ -81,7 +81,7 @@ class Snapshot(object):
         tiid = int(row[0])
         self.l_mix_txs.append(tiid)
         self.s_mix_txs.add(tiid)
-        txid_prefix = row[1][0:2*TXID_PREFIX_LENGTH+1]
+        txid_prefix = row[1][0:2*TXID_PREFIX_LENGTH]
         self.d_txids[txid_prefix] = mix_round
         ts = int(row[2])
         self.l_ts_mix_txs.append(ts)
@@ -100,7 +100,7 @@ class Snapshot(object):
         tiid = int(row[0])
         self.l_tx0s.append(tiid)
         self.s_tx0s.add(tiid)
-        txid_prefix = row[1][0:2*TXID_PREFIX_LENGTH+1]
+        txid_prefix = row[1][0:2*TXID_PREFIX_LENGTH]
         self.d_tx0s[txid_prefix] = tiid
         ts = int(row[2])
         self.l_ts_tx0s.append(ts)

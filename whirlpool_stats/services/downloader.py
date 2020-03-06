@@ -6,6 +6,7 @@ A class allowing to download the latest snapshots of Whirpool's transaction grap
 import sys
 import getopt
 import requests
+from random import randint
 from whirlpool_stats.utils.constants import *
 
 
@@ -47,7 +48,7 @@ class Downloader(object):
       # Iterates over the 3 files composing the snapshot for a given denom 
       for f in FILENAME_TEMPLATES:
         filename = '%s_%s.csv' % (f, d)
-        url = '%s/%s' % (BASE_URL_SNAPSHOTS, filename)
+        url = '%s/%s?rand=%d' % (BASE_URL_SNAPSHOTS, filename, randint(1, 10000))
         snapshot_path = '%s/%s' % (self.snapshots_dir, filename)
         # Downloads the file and save to disk
         r = session.get(url)
