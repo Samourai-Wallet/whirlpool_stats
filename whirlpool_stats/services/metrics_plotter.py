@@ -68,12 +68,22 @@ class Plotter(object):
       o_metrics = self.tx0_metrics
       lbl_direction = 'Tx0s counterparties heterogeneity'
 
+      # Number of outputs created by the Tx0s
+      if metrics == 'outputs':
+        chart_type = CT_SCATTERPLOT
+        l_metrics = list(o_metrics.d_metrics.values())
+        y_values = [item[2] for item in l_metrics]
+        x_values = [item[3] for item in l_metrics]
+        lbl_x = 'tx0 index'
+        lbl_y = '#outputs created by Tx0'
+        chart_title = 'Whirlpool Tx0s #Outputs (pools %s)' % o_metrics.snapshot.denom
+
       # Heterogeneity ratio
-      if metrics == 'hr':
+      elif metrics == 'hr':
         chart_type = CT_SCATTERPLOT
         l_metrics = list(o_metrics.d_metrics.values())
         y_values = [float(item[1]) / float(item[0]) for item in l_metrics]
-        x_values = list(range(0, len(y_values)))
+        x_values = [item[3] for item in l_metrics]
         lbl_x = 'tx0 index'
         lbl_y = 'heterogeneity ratio (#counterparties / #mixed outputs)'
         chart_title = 'Whirlpool %s (pools %s)' %\
@@ -102,7 +112,7 @@ class Plotter(object):
 
       # Invalid name
       else:
-        print('Invalid metrics (values: hr, hrout, hrdist).')
+        print('Invalid metrics (values: outputs, hr, hrout, hrdist).')
         return
 
 

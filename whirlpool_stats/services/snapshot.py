@@ -34,6 +34,8 @@ class Snapshot(object):
     self.l_tx0s = []
     # Ordered list of tx0s block timestamps
     self.l_ts_tx0s = []
+    # Ordered list of #utxoscreated by tx0s
+    self.l_utxos_tx0s = []
     # Ordered list of mix txs
     self.l_mix_txs = []
     # Ordered list of mix txs block timestamps
@@ -104,6 +106,8 @@ class Snapshot(object):
         self.d_tx0s[txid_prefix] = tiid
         ts = int(row[2])
         self.l_ts_tx0s.append(ts)
+        nb_utxos = int(row[3])
+        self.l_utxos_tx0s.append(nb_utxos)
 
     print('  Tx0s loaded')
 
