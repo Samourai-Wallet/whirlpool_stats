@@ -1,5 +1,7 @@
 # whirlpool_stats
 
+# This repository is now maintained at https://code.samourai.io/whirlpool/whirlpool_stats 
+
 Whirlpool Stats Tools (WST for short) is a command line tool allowing to compute privacy-oriented statistics related to Whirlpool.
 
 Main features:
