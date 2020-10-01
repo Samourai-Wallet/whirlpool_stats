@@ -34,3 +34,7 @@ NB_PARTICIPANTS = 5
 
 # TXID prefix length (in bytes)
 TXID_PREFIX_LENGTH = 8
+
+# HYPERLOGLOG P VALUE
+# P=14 should give us an error rate <~ 0.01
+HLL_P = 14
