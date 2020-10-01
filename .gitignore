@@ -107,3 +107,4 @@ dmypy.json
 .venv/
 .vscode/
 .env
+private_tests/
