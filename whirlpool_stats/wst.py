@@ -19,6 +19,7 @@ from whirlpool_stats.services.backward_metrics import BackwardMetrics
 from whirlpool_stats.services.tx0s_metrics import Tx0sMetrics
 from whirlpool_stats.services.exporter import Exporter
 from whirlpool_stats.services.metrics_plotter import Plotter
+from whirlpool_stats.services.tx_scores import TxScores
 
 
 class WhirlpoolStats(Cmd):
@@ -144,47 +145,51 @@ Examples:
 
   def do_score(self, args):
     '''
-Displays the metrics for a mix tx identified by its txid 
+Displays the metrics for a mix tx identified by its txid
+Syntax: score <txid> [denom]
 Examples:
   score 450f236d596fc8a43916d624734fa7608cff1f17af5c3ddf81d7ad79021a645d
+  score 450f236d596fc8a43916d624734fa7608cff1f17af5c3ddf81d7ad79021a645d 05
     '''
     print('')
+
+    txid = None
+    denom = None
 
     if len(args) == 0:
       print('The txid of a mix transaction is mandatory.')
       print(' ')
       return
+    else:
+      l_args = args.split(' ')
+      txid = l_args[0]
+      if len(l_args) == 2:
+        denom = l_args[1]     
     
-    txid_prefix = args[0:2*TXID_PREFIX_LENGTH]
+    snapshot = Snapshot(self.working_dir)
+    scores_processor = TxScores(snapshot)
+    scores = scores_processor.compute(txid, denom)
 
-    if txid_prefix in self.snapshot.d_txids.keys():
-      mix_round = self.snapshot.d_txids[txid_prefix]
-      fwd_anonset = self.fwd_metrics.l_anonsets[mix_round]
-      fwd_spread = self.fwd_metrics.l_spreads[mix_round]
-      bwd_anonset = self.bwd_metrics.l_anonsets[mix_round]
-      bwd_spread = self.bwd_metrics.l_spreads[mix_round]
+    print(' ')
 
+    if scores is None:
+      print('Unable to find this transaction in snapshots available in the working directory.')
+
+    elif scores['type'] == 'mix': 
       print('Backward-looking metrics for the outputs of this mix:')
-      print('  anonset = %d' % bwd_anonset)
-      print('  spread = %d%%' % bwd_spread)
+      print('  anonset = %d' % scores['bwd_anonset'])
+      print('  spread = %d%%' % scores['bwd_spread'])
       print('')
       print('Forward-looking metrics for Tx0s outputs having this transaction as their first mix:')
-      print('  anonset = %d' % fwd_anonset)
-      print('  spread = %d%%' % fwd_spread)
-
-    elif txid_prefix in self.snapshot.d_tx0s.keys():
-      tx0_metrics = self.tx0_metrics.d_metrics[txid_prefix]
-      nb_outs = tx0_metrics[0]
-      nb_counterparties = tx0_metrics[1]
-      heterogeneity = float(nb_counterparties) / float(nb_outs)
-
-      print('Metrics for this Tx0:')
-      print('  number of mixed outputs = %d' % nb_outs)
-      print('  number of counterparties (tx0s) = %d' % nb_counterparties)
-      print('  heterogeneity ratio = %.2f' % heterogeneity)
+      print('  anonset = %d' % scores['fwd_anonset'])
+      print('  spread = %d%%' % scores['fwd_spread'])
 
     else:
-      print('Transaction not found in this snapshot.')
+      heterogeneity = float(scores['nb_counterparties']) / float(scores['nb_outs'])
+      print('Metrics for this Tx0:')
+      print('  number of mixed outputs = %d' % scores['nb_outs'])
+      print('  number of counterparties (tx0s) = %d' % scores['nb_counterparties'])
+      print('  heterogeneity ratio = %.2f' % heterogeneity)
 
     print(' ')
 
