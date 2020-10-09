@@ -59,7 +59,7 @@ class Snapshot(object):
     self.snapshots_dir = snapshots_dir
 
 
-  def load(self, denom):
+  def load(self, denom, show_logs=True):
     '''
     Loads the snapshot for a given denomination
     Parameters:
@@ -69,7 +69,7 @@ class Snapshot(object):
     self.reset_data()
     self.denom = denom
 
-    print('Start loading snapshot for %s denomination' % self.denom)
+    show_logs and print('Start loading snapshot for %s denomination' % self.denom)
 
     # Loads the mix txs
     filename = '%s_%s.csv' % (FN_MIX_TXS, self.denom)
@@ -89,7 +89,7 @@ class Snapshot(object):
         self.l_ts_mix_txs.append(ts)
         mix_round += 1
     
-    print('  Mix txs loaded')
+    show_logs and print('  Mix txs loaded')
 
     # Loads the tx0s
     filename = '%s_%s.csv' % (FN_TX0S, self.denom)
@@ -109,7 +109,7 @@ class Snapshot(object):
         nb_utxos = int(row[3])
         self.l_utxos_tx0s.append(nb_utxos)
 
-    print('  Tx0s loaded')
+    show_logs and print('  Tx0s loaded')
 
     # Loads the relationships between txs
     filename = '%s_%s.csv' % (FN_LINKS, self.denom)
@@ -124,7 +124,7 @@ class Snapshot(object):
         self.d_links[src].append(tgt)
         self.d_reverse_links[tgt].append(src)
 
-    print('  Tx links loaded')
+    show_logs and print('  Tx links loaded')
     
-    print('Done!')
+    show_logs and print('Done!')
 

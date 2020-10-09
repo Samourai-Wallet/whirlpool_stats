@@ -28,6 +28,8 @@ setup(
   install_requires=[
     'PySocks',
     'requests[socks]',
-    'plotly >= 4.1.0'
+    'plotly >= 4.1.0',
+    'numpy >= 1.11.0',
+    'datasketch'
   ]
 )
