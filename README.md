@@ -90,6 +90,19 @@ download  export  help  load  plot  quit  score  socks5  workdir
 wst#/tmp>
 ```
 
+Show help for a specific command
+```
+wst#/tmp> help socks5
+
+Displays or sets the url:port of a socks5 proxy used to download snapshots files from OXT.
+Examples:
+  socks5 127.0.0.1:9050    => sets the ip:port of your socks5 proxy
+  socks5 none              => removes the socks5 proxy previously defined
+  socks5                   => displays the current working directory
+    
+wst#/tmp>
+```
+
 Set Socks5 proxy before downloading data from OXT
 ```
 wst#/tmp> socks5 127.0.0.1:9150
@@ -119,7 +132,22 @@ Download complete
 wst#/home/laurent/whirlpool>
 ```
 
-Load and compute the statistcs for the snaphot
+Display a few metrics for a transaction (mix or TX0) stored in a snapshot of the working directory 
+```
+wst#/home/laurent/whirlpool> score 4e72519d391ce83e0659c9022a00344bedbb253de1747cf290162b3d3ea51479
+
+Backward-looking metrics for the outputs of this mix:
+  anonset = 92
+  spread = 89%
+
+Forward-looking metrics for the outputs of Tx0s having this transaction as their first mix:
+  anonset = 127
+  spread = 76%
+
+wst#/home/laurent/whirlpool>
+```
+
+Load and compute the statistics for the snaphot
 ```
 wst#/home/laurent/whirlpool> load 05
 
@@ -145,21 +173,6 @@ Plot a chart for a given metrics of the active snapshot (e.g.: forward-looking a
 wst#/home/laurent/whirlpool> plot fwd anonset
 
 Preparing the chart... 
-
-wst#/home/laurent/whirlpool>
-```
-
-Display the metrics computed for a transaction stored in the active snapshot 
-```
-wst#/home/laurent/whirlpool> score 4e72519d391ce83e0659c9022a00344bedbb253de1747cf290162b3d3ea51479
-
-Backward-looking metrics for the outputs of this mix:
-  anonset = 92
-  spread = 89%
-
-Forward-looking metrics for the outputs of Tx0s having this transaction as their first mix:
-  anonset = 127
-  spread = 76%
 
 wst#/home/laurent/whirlpool>
 ```
