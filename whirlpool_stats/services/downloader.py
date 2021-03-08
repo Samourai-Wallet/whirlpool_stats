@@ -74,13 +74,14 @@ def usage():
   '''
   Usage message for this module
   '''
-  sys.stdout.write('python download_snapshot.py [--target_dir=/tmp] [--denoms=05,005,001] [--socks5=localhost:9050]\n')
+  sys.stdout.write('python download_snapshot.py [--target_dir=/tmp] [--denoms=05,005,001,0001] [--socks5=localhost:9050]\n')
   sys.stdout.write('\n\n[-t OR --target_dir] = Path of the directory that will store the snapshot files.')
   sys.stdout.write('\n\n[-d OR --denoms] = List of codes identifying the mix denominations of interest.')
   sys.stdout.write('\n    Available denomination codes are :')
   sys.stdout.write('\n    05 (O.5 BTC pools')
   sys.stdout.write('\n    005 (O.05 BTC pools')
   sys.stdout.write('\n    001 (O.01 BTC pools')
+  sys.stdout.write('\n    0001 (O.001 BTC pools')
   sys.stdout.write('\n\n[-s OR --socks5] = Url of the socks5 proxy to use for downloading the snapshot.')
   sys.stdout.flush()
 

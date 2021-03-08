@@ -25,7 +25,7 @@ class TxScores(object):
     for a transaction (tx0 or mix) identified by its TXID
     Parameters:
       txid = Transaction id
-      denom (optional) = Pool denomination (05, 005, 001)
+      denom (optional) = Pool denomination (05, 005, 001, 0001)
     '''
     print('Processing scores for transaction %s' % txid)
 

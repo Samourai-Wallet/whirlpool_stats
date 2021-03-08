@@ -104,7 +104,7 @@ Examples:
   def do_download(self, args):
     '''
 Downloads the snapshot(s) for one or several pool denominations
-Available denomnination codes are 05, 005, 001
+Available denomnination codes are 05, 005, 001, 0001
 Examples:
   download 05         => downloads the snapshot of the 0.5BTC pools
   download 005,001    => downloads the snapshots of the 0.05BTC and 0.01BTC pools
@@ -121,7 +121,7 @@ Examples:
     '''
 Loads in memory the snapshot of a given denomination
 and computes its metrics
-Available denomnination codes are 05, 005, 001
+Available denomnination codes are 05, 005, 001, 0001
 Examples:
   compute 05  => compute metrics for snaphot of the 0.5BTC pools
     '''
