@@ -22,11 +22,13 @@ FILENAME_TEMPLATES = [
 DENOM_05 = '05'
 DENOM_005 = '005'
 DENOM_001 = '001'
+DENOM_0001 = '0001'
 
 ALL_DENOMS = [
   DENOM_05,
   DENOM_005,
-  DENOM_001
+  DENOM_001,
+  DENOM_0001
 ]
 
 # Number of participants per mix
