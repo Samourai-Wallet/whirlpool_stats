@@ -19,7 +19,7 @@ setup(
   author_email='laurentmt145@gmail.com',
   maintainer='laurentmt',
   url='https://github.com/Samourai-Wallet/whirlpool_stats',
-  download_url='https://github.com/Samourai-Wallet/whirlpool_stats/tarball/0.2.0',
+  download_url='https://code.samourai.io/whirlpool/whirlpool_stats/-/archive/v0.2.0/whirlpool_stats-v0.2.0.tar.gz',
   keywords=['bitcoin', 'privacy'],
   classifiers=['Development Status :: 3 - Alpha', 'Intended Audience :: Developers', 'License :: OSI Approved :: MIT License',
                'Natural Language :: English', 'Programming Language :: Python :: 3.4',
