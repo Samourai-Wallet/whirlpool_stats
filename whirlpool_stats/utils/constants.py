@@ -18,6 +18,15 @@ FILENAME_TEMPLATES = [
   FN_LINKS
 ]
 
+# Filenames templates composing the list of txids
+FN_MIX_TXIDS = 'whirlpool_txids_mix'
+FN_TX0S_TXIDS = 'whirlpool_txids_tx0s'
+
+TXIDS_FILENAME_TEMPLATES = [
+  FN_MIX_TXIDS,
+  FN_TX0S_TXIDS,
+]
+
 # Denomination codes
 DENOM_05 = '05'
 DENOM_005 = '005'

@@ -20,17 +20,19 @@ from whirlpool_stats.services.tx0s_metrics import Tx0sMetrics
 from whirlpool_stats.services.exporter import Exporter
 from whirlpool_stats.services.metrics_plotter import Plotter
 from whirlpool_stats.services.tx_scores import TxScores
+from whirlpool_stats.services.pools_capacity import PoolsCapacity
 
 
 class WhirlpoolStats(Cmd):
 
-  def __init__(self, working_dir, socks5):
+  def __init__(self, working_dir, socks5, rpc_connection_uri):
     '''
     Constructor
     '''
     super(WhirlpoolStats, self).__init__()
     self.working_dir = working_dir
     self.socks5 = socks5
+    self.rpc_connection_uri = rpc_connection_uri
     
     # Snapshot loaded in memory
     self.snapshot = Snapshot(self.working_dir)
@@ -103,17 +105,24 @@ Examples:
 
   def do_download(self, args):
     '''
-Downloads the snapshot(s) for one or several pool denominations
+Downloads the txids of all mixes and Tx0s of all pools
+or downloads the snapshot(s) for one or several pool denominations
 Available denomnination codes are 05, 005, 001, 0001
 Examples:
+  download txids      => downloads the txids of mixes and tx0s of all pools
   download 05         => downloads the snapshot of the 0.5BTC pools
   download 005,001    => downloads the snapshots of the 0.05BTC and 0.01BTC pools
   download            => downloads the snapshots of all denominations
     '''
     print('')
     downloader = Downloader()
-    denoms = ALL_DENOMS if (len(args) == 0) else args.split(',') 
-    downloader.download(self.working_dir, denoms, self.socks5)
+    if len(args) == 0:
+      downloader.download(self.working_dir, ALL_DENOMS, self.socks5)
+    elif args == 'txids':
+      downloader.download_txids(self.working_dir, self.socks5)
+    else:
+      denoms = args.split(',') 
+      downloader.download(self.working_dir, denoms, self.socks5)
     print(' ')
 
 
@@ -250,6 +259,63 @@ Examples:
     print(' ')
 
 
+  def do_capacity(self, args):
+    '''
+Computes the unspent capacity of all pools.
+Examples:
+  capacity          => computes the premix and postmix capacities of all pools
+  capacity postmix  => computes the postmix capacities of all pools
+  capacity premix   => computes the premix capacities of all pools
+    '''
+    print('')
+
+    if len(args) == 0:
+      mode = 'all'
+    elif args == 'premix':
+      mode = 'premix'
+    elif args == 'postmix':
+      mode = 'postmix'
+    else:
+      mode = 'all'
+
+    capacity_processor = PoolsCapacity(self.working_dir, self.socks5, self.rpc_connection_uri)
+    
+    if mode == 'postmix':
+      capacities = capacity_processor.compute_postmix_capacities()
+    elif mode == 'premix':
+      capacities = capacity_processor.compute_premix_capacities()
+    else:
+      capacities = capacity_processor.compute_capacities()
+    
+    print(' ')
+    print(' ')
+    print('---------------------------------')
+    print('Results                          ')
+    print('---------------------------------')
+    nb_utxos = 0
+    amount = 0
+    
+    for denom in ALL_DENOMS:
+      if denom in capacities:
+        capacity = capacities[denom]
+        btc_amount = capacity['amount'] / 100000000.0
+        print(' ')
+        print('Pool %s:' % denom)
+        print('  Number of UTXOs = %d' % capacity['utxos'])
+        print('  Cumulated amount of UTXOs = %.8f BTC' % btc_amount)
+        nb_utxos += capacity['utxos'] 
+        amount += capacity['amount'] 
+   
+    print(' ')
+    btc_amount = amount / 100000000.0
+    print('Total:')
+    print('  Number of UTXOs = %d' % nb_utxos)
+    print('  Cumulated amount of UTXOs = %.8f BTC' % btc_amount)
+
+    print(' ')
+
+
+
   def do_quit(self, args):
     ''''
 Quits the program.
@@ -263,9 +329,10 @@ def usage():
   '''
   Usage message for this module
   '''
-  sys.stdout.write('python wst.py [--workdir=/tmp] [--socks5=localhost:9050]\n')
+  sys.stdout.write('python wst.py [--workdir=/tmp] [--socks5=localhost:9050] [--rpc=http://username:password@host:port]\n')
   sys.stdout.write('\n\n[-w OR --target_dir] = Path of the directory that will store the snapshot files.')
   sys.stdout.write('\n\n[-s OR --socks5] = Url of the socks5 proxy to use for downloading the snapshot.')
+  sys.stdout.write('\n\n[-r OR --rpc] = Connection url to bitcoind RPC API. Format = http://username:password@host:port')
   sys.stdout.flush()
 
 
@@ -273,6 +340,7 @@ if __name__ == '__main__':
   # Initializes the parameters
   working_dir = '/tmp'
   socks5 = None
+  rpc_connection_uri = ''
   argv = sys.argv[1:]
 
   # Processes the command line arguments
@@ -294,7 +362,9 @@ if __name__ == '__main__':
       target_dir = arg
     elif opt in ('-s', '--socks5'):
       socks5 = arg
+    elif opt in ('-r', '--rpc'):
+      rpc_connection_uri = arg
 
-  wst = WhirlpoolStats(working_dir, socks5)
+  wst = WhirlpoolStats(working_dir, socks5, rpc_connection_uri)
   wst.set_prompt()
   wst.cmdloop('Starting Whirlpool Stats Tools...\nType "help" for a list of available commands.\n')

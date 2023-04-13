@@ -58,6 +58,41 @@ class Downloader(object):
       print('Download complete\n')
 
 
+  def download_txids(self, snapshots_dir, socks5=None):
+    '''
+    Downloads the list of txids for mixes and Tx0s of all pools
+    Parameters:
+      snapshots_dir = path of the directory that will store snapshot files
+      socks5        = url of the socks5 proxy to use (or None)
+    '''
+    self.snapshots_dir = snapshots_dir
+    self.socks5 = socks5
+
+    # Creates a requests session
+    session = requests.session()
+    session.proxies = {}
+  
+    # Sets the tor proxy if needed
+    if self.socks5 is not None:
+      session.proxies['http'] = 'socks5h://' + self.socks5
+      session.proxies['https'] = 'socks5h://' + self.socks5
+
+    # Downloads txids files for all denoms
+    for d in ALL_DENOMS:
+      print('Start download of txids for %s denomination' % d)
+      # Iterates over the 3 files composing the snapshot for a given denom 
+      for f in TXIDS_FILENAME_TEMPLATES:
+        filename = '%s_%s.csv' % (f, d)
+        url = '%s/%s?rand=%d' % (BASE_URL_SNAPSHOTS, filename, randint(1, 10000))
+        snapshot_path = '%s/%s' % (self.snapshots_dir, filename)
+        # Downloads the file and save to disk
+        r = session.get(url)
+        with open(snapshot_path, 'wb') as tmp_file:
+          tmp_file.write(r.content)
+          print('  %s downloaded' % filename)
+      print('Download complete\n')
+
+
 def main(snapshots_dir, denoms=ALL_DENOMS, socks5=None):
   '''
   Main function
