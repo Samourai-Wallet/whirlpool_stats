@@ -30,6 +30,7 @@ setup(
     'requests[socks]',
     'plotly >= 4.1.0',
     'numpy >= 1.11.0',
-    'datasketch'
+    'datasketch',
+    'python-bitcoinrpc'
   ]
 )
