@@ -6,6 +6,7 @@ Main features:
 - download of snapshots of the transaction graph for all the pools in a given denomination (downloads from OXT - snapshots refreshed daily)
 - support of downloads through SOCKS5
 - computation of metrics for a downloaded snapshot
+- computation of the unspent capacity of the pools
 - export (CSV format) of statistics computed for the active snapshot
 - generation of dynamic charts for the active snapshot
 - display of computed metrics for a mix transaction stored in the active snapshot
@@ -45,6 +46,8 @@ numpy >= 1.11.0
 
 datasketch
 
+python-bitcoinrpc
+
 
 ## Installation
 
@@ -69,9 +72,9 @@ python3 wst.py
 
 ## Usage
 
-Start a WST session
+Start a WST session using the RPC API of my local bitcoind
 ```
-> python wst.py
+> python wst.py --rpc="http://mylogin:mypassword@127.0.0.1:8332"
 
 Starting Whirlpool Stats Tool...
 Type "help" for a list of available commands.
@@ -85,7 +88,7 @@ wst#/tmp> help
 
 Documented commands (type help <topic>):
 ========================================
-download  export  help  load  plot  quit  score  socks5  workdir
+capacity download  export  help  load  plot  quit  score  socks5  workdir
 
 wst#/tmp>
 ```
@@ -132,6 +135,20 @@ Download complete
 wst#/home/laurent/whirlpool>
 ```
 
+Download in the working directory a set of files listing the TxIds of mixes and Tx0s
+```
+wst#/home/laurent/whirlpool> download txids
+
+Start download of txids for 05 denomination
+  whirlpool_txids_mix_05.csv downloaded
+  whirlpool_txids_tx0s_05.csv downloaded
+Download complete
+
+...
+
+wst#/home/laurent/whirlpool>
+```
+
 Display a few metrics for a transaction (mix or TX0) stored in a snapshot of the working directory 
 ```
 wst#/home/laurent/whirlpool> score 4e72519d391ce83e0659c9022a00344bedbb253de1747cf290162b3d3ea51479
@@ -173,6 +190,43 @@ Plot a chart for a given metrics of the active snapshot (e.g.: forward-looking a
 wst#/home/laurent/whirlpool> plot fwd anonset
 
 Preparing the chart... 
+
+wst#/home/laurent/whirlpool>
+```
+
+Compute the unspent postmix capacities of all pools
+```
+wst#/home/laurent/whirlpool> capacity postmix
+
+Started processing mixes from pool 05
+  Processed 100 mixes
+  Processed 200 mixes
+  Processed 300 mixes
+  ...
+
+---------------------------------
+Results                          
+---------------------------------
+ 
+Pool 05:
+  Number of UTXOs = 6226
+  Cumulated amount of UTXOs = 3113.00000000 BTC
+ 
+Pool 005:
+  Number of UTXOs = 8411
+  Cumulated amount of UTXOs = 420.55000000 BTC
+ 
+Pool 001:
+  Number of UTXOs = 15822
+  Cumulated amount of UTXOs = 158.22000000 BTC
+ 
+Pool 0001:
+  Number of UTXOs = 13228
+  Cumulated amount of UTXOs = 13.22800000 BTC
+ 
+Total:
+  Number of UTXOs = 43687
+  Cumulated amount of UTXOs = 3704.99800000 BTC
 
 wst#/home/laurent/whirlpool>
 ```
