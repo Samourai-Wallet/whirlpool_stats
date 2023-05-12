@@ -34,12 +34,14 @@ class Snapshot(object):
     self.l_tx0s = []
     # Ordered list of tx0s block timestamps
     self.l_ts_tx0s = []
-    # Ordered list of #utxoscreated by tx0s
+    # Ordered list of #utxos created by tx0s
     self.l_utxos_tx0s = []
     # Ordered list of mix txs
     self.l_mix_txs = []
     # Ordered list of mix txs block timestamps
     self.l_ts_mix_txs = []
+    # Dictionary tiid => #utxos
+    self.d_mix_txs_utxos = []
     # Dictionary of links between txs (src => tgt)
     self.d_links = defaultdict(list)
     # Dictionary of reverse links between txs (tgt => src)
@@ -87,6 +89,9 @@ class Snapshot(object):
         self.d_txids[txid_prefix] = mix_round
         ts = int(row[2])
         self.l_ts_mix_txs.append(ts)
+        nb_utxos = int(row[3])
+        if nb_utxos != DEFAULT_NB_PARTICIPANTS:
+          self.d_mix_txs_utxos[tiid] = nb_utxos
         mix_round += 1
     
     show_logs and print('  Mix txs loaded')

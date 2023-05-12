@@ -41,7 +41,7 @@ ALL_DENOMS = [
 ]
 
 # Number of participants per mix
-NB_PARTICIPANTS = 5
+DEFAULT_NB_PARTICIPANTS = 5
 
 # TXID prefix length (in bytes)
 TXID_PREFIX_LENGTH = 8
