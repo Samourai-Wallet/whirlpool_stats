@@ -51,7 +51,9 @@ class ForwardMetrics(object):
     for tiid in reversed(self.snapshot.l_mix_txs):
       hll = HyperLogLogPlusPlus(p=HLL_P)
       next_tiids = self.snapshot.d_links[tiid]
-      nb_utxos = NB_PARTICIPANTS - len(next_tiids)
+      is_large_mix = tiid in self.snapshot.d_mix_txs_utxos
+      nb_txos = self.snapshot.d_mix_txs_utxos[tiid] if is_large_mix else DEFAULT_NB_PARTICIPANTS
+      nb_utxos = nb_txos - len(next_tiids)
       # Adds an entry in the HLL for each UTXO
       for i in range(0, nb_utxos):
         utxo_id = '%d-%d' % (tiid, i)

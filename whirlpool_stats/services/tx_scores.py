@@ -133,7 +133,9 @@ class TxScores(object):
     for j in range(mix_round, len(self.snapshot.l_mix_txs)):
       tiid_round_j = self.snapshot.l_mix_txs[j]
       nb_remixes = len(self.snapshot.d_links[tiid_round_j])
-      nb_later_unmixed_txos += NB_PARTICIPANTS - nb_remixes
+      is_large_mix = tiid_round_j in self.snapshot.d_mix_txs_utxos
+      nb_txos = self.snapshot.d_mix_txs_utxos[tiid_round_j] if is_large_mix else DEFAULT_NB_PARTICIPANTS
+      nb_later_unmixed_txos += nb_txos - nb_remixes
     spread = float(anonset) * 100.0 / float(nb_later_unmixed_txos)
     # Returns the result
     return {
@@ -173,7 +175,9 @@ class TxScores(object):
       tiid = id of the transaction
     '''
     next_tiids = self.snapshot.d_links[tiid]
-    nb_utxos = NB_PARTICIPANTS - len(next_tiids)
+    is_large_mix = tiid in self.snapshot.d_mix_txs_utxos
+    nb_txos = self.snapshot.d_mix_txs_utxos[tiid] if is_large_mix else DEFAULT_NB_PARTICIPANTS
+    nb_utxos = nb_txos - len(next_tiids)
     
     for next_tiid in next_tiids:
       if next_tiid not in self.s_processed_txs:

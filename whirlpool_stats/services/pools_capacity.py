@@ -58,7 +58,7 @@ class PoolsCapacity(object):
       filepath = '%s/%s' % (self.working_dir, filename)
 
       with open(filepath, newline='\n') as csvfile:
-        file_reader = csv.reader(csvfile, delimiter=',')
+        file_reader = csv.reader(csvfile, delimiter=';')
         next(file_reader, None)  # skips the headers
         nb_tx0s = 0
         txids = []
@@ -127,28 +127,31 @@ class PoolsCapacity(object):
       filepath = '%s/%s' % (self.working_dir, filename)
 
       with open(filepath, newline='\n') as csvfile:
-        file_reader = csv.reader(csvfile, delimiter=',')
+        file_reader = csv.reader(csvfile, delimiter=';')
         next(file_reader, None)  # skips the headers
         mix_round = 0
         txids = []
+        nb_txos = []
         # Iterates over all mixes
         for row in file_reader:
           txids.append(row[0])
+          nb_txos.append(int(row[1]))
           mix_round += 1
           # Processed a batch of 100 mixes
           if mix_round % 100 == 0:
             try:
-              nb_utxos, amount = self.get_mixes_capacity(txids)
+              nb_utxos, amount = self.get_mixes_capacity(txids, nb_txos)
               postmix_nb_utxos += nb_utxos
               postmix_amount += amount
               print('  Processed %d mixes' % mix_round)
               txids = []
+              nb_txos = []
             except Exception as e:
               print('A problem was met while computing the unspent capacity\n', e)
               return result
         # Processes last batch of mixes
         try:
-          nb_utxos, amount = self.get_mixes_capacity(txids)
+          nb_utxos, amount = self.get_mixes_capacity(txids, nb_txos)
           postmix_nb_utxos += nb_utxos
           postmix_amount += amount
           print('  Processed %d mixes' % mix_round)
@@ -186,12 +189,14 @@ class PoolsCapacity(object):
 
 
 
-  def get_mixes_capacity(self, txids):
+  def get_mixes_capacity(self, txids, nbs_txos):
     nb_utxos = 0
     amount = 0
     outpoints = []
-    for txid in txids:
-      for i in range(0, 5):
+    for i in range(0, len(txids)):
+      txid = txids[i]
+      nb_txos = nbs_txos[i]
+      for i in range(0, nb_txos):
         outpoints.append((txid, i))
     utxos = self.btc_wrapper.get_txouts(outpoints, False)
     for utxo in utxos:

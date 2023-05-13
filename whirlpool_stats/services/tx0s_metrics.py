@@ -39,7 +39,8 @@ class Tx0sMetrics(object):
     for prefix, tiid in self.snapshot.d_tx0s.items():
       s_counterparties = set()
       # Gets the number of outputs created by the current Tx0
-      nb_txos = self.snapshot.l_utxos_tx0s[nb_processed]
+      tx0_idx = self.snapshot.l_tx0s.index(tiid)
+      nb_txos = self.snapshot.l_utxos_tx0s[tx0_idx]
       # Gets the number of spent outputs for the current Tx0
       first_mixes = self.snapshot.d_links[tiid]
       nb_spent_txos = len(first_mixes)
@@ -55,9 +56,9 @@ class Tx0sMetrics(object):
       # (remove 1 for the current Tx0)
       nb_counterparties = len(s_counterparties) - 1
       # Stores the results
-      self.d_metrics[prefix] = (nb_spent_txos, nb_counterparties, nb_txos, nb_processed)
+      self.d_metrics[prefix] = (nb_spent_txos, nb_counterparties, nb_txos, tx0_idx)
       # Updates the #tx0s created per day
-      day = get_datetime_of_day(self.snapshot.l_ts_tx0s[nb_processed])
+      day = get_datetime_of_day(self.snapshot.l_ts_tx0s[tx0_idx])
       self.d_nb_new_tx0s[day] += 1
       # Displays a trace
       nb_processed += 1
