@@ -41,7 +41,7 @@ class Snapshot(object):
     # Ordered list of mix txs block timestamps
     self.l_ts_mix_txs = []
     # Dictionary tiid => #utxos
-    self.d_mix_txs_utxos = []
+    self.d_mix_txs_utxos = defaultdict(int)
     # Dictionary of links between txs (src => tgt)
     self.d_links = defaultdict(list)
     # Dictionary of reverse links between txs (tgt => src)
